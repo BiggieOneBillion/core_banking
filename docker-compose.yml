@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=bakugan_(*3)/12QWE
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+volumes:
+  mssql_data:
+
+
+# services:
+#   mssql:
+#     image: mcr.microsoft.com/mssql/server:2022-latest
+#     container_name: mssql
+#     environment:
+#       ACCEPT_EULA: "Y"
+#       SA_PASSWORD: "-bakugan_(*3)/12QWE"   # replace with a strong password
+#     ports:
+#       - "1433:1433"
+#     volumes:
+#       - mssql_data:/var/opt/mssql
+#       - ./init.sql:/init.sql                # optional init script (see below)
+#     restart: unless-stopped
+
+#   mssql-init:
+#     image: mcr.microsoft.com/mssql-tools
+#     depends_on:
+#       - mssql
+#     entrypoint: /bin/bash -c "until /opt/mssql-tools/bin/sqlcmd -S mssql -U SA -P '$$SA_PASSWORD' -Q 'SELECT 1' &>/dev/null; do sleep 1; done; /opt/mssql-tools/bin/sqlcmd -S mssql -U SA -P '$$SA_PASSWORD' -i /init.sql"
+#     environment:
+#       SA_PASSWORD: "-bakugan_(*3)/12QWE"
+#     volumes:
+#       - ./init.sql:/init.sql
+#     # the init service will run then exit
+
+# volumes:
+#   mssql_data:

@@ -1,11 +1,13 @@
 using System;
+using CoreBanking.Core.Interface;
 using CoreBanking.Core.Models;
+using CoreBanking.Core.ValueObjects;
 
 namespace CoreBanking.Core.Entities;
 
-public class Customer
+public class Customer : ISoftDelete
 {
-    public Guid CustomerId { get; private set; }
+    public CustomerId CustomerId { get; private set; }
     public string Firstname { get; private set; }
     public string Lastname { get; private set; }
     public string Email { get; private set; }
@@ -15,13 +17,18 @@ public class Customer
 
     public bool IsActive { get; private set; }
 
+     public bool IsDeleted { get; private set; }
+     public DateTime? DeletedAt { get; private set; }
+        public string? DeletedBy { get; private set; }
+
+
     private readonly List<Account> _account = new();
 
     public IReadOnlyCollection<Account> Accounts => _account.AsReadOnly();
 
     public Customer(string firstName, string lastName, string email, string phoneNumber)
     {
-        CustomerId = Guid.NewGuid();
+        CustomerId = CustomerId.Create();
         Firstname = firstName ?? throw new ArgumentNullException(nameof(firstName));
         Lastname = lastName ?? throw new ArgumentNullException(nameof(lastName));
         Email = email ?? throw new ArgumentNullException(nameof(email));
@@ -51,5 +58,16 @@ public class Customer
     {
         _account.Add(account);
     }
+
+     public void SoftDelete(string deletedBy)
+        {
+            if (Accounts.Any(a => a.Balance.Amount > 0))
+                throw new InvalidOperationException("Cannot delete customer with account balance");
+                
+            IsDeleted = true;
+            DeletedAt = DateTime.UtcNow;
+            DeletedBy = deletedBy;
+        }
+
 
 }

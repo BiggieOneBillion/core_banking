@@ -19,9 +19,9 @@ public interface IAccountRepository
 
     Task<bool> AccountNumberExistsAsync(AccountNumber accountNumber);
 
-    AccountModel GetById(int id);
+    // AccountModel GetById(Guid id);
 
-    IEnumerable<AccountModel> GetAll();
+    Task<List<Account>> GetAllAsync();
 
-    void Add(AccountModel account);
+    // void Add(AccountModel account);
 }

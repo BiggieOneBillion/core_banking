@@ -1,52 +1,72 @@
-using System;
+using System.Reflection.Metadata.Ecma335;
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.Interface;
 using CoreBanking.Core.Models;
 using CoreBanking.Core.ValueObjects;
+using CoreBankingTest.Infra.Data;
+using Microsoft.EntityFrameworkCore;
 
-namespace CoreBanking.Infrastructure.Repositories;
-
-public class AccountRepository: IAccountRepository
+namespace CoreBanking.Infrastructure.Repositories
 {
-    private List<AccountModel> _accounts = new()
+    public class AccountRepository : IAccountRepository
     {
-        new AccountModel{Id = 1, Name= "John Doe", Balance = 5000, Currency = "Naira"},
-        new AccountModel{Id = 1, Name= "Jane Smith", Balance = 8000, Currency = "Dollar"},
-    };
+        private readonly BankingDbContext _context;
 
-    public IEnumerable<AccountModel> GetAll() => _accounts;
+        public AccountRepository(BankingDbContext context)
+        {
+            _context = context;
+        }
 
-    public AccountModel GetById(int Id) => _accounts.FirstOrDefault(a => a.Id == Id)!;
+        public async Task<Account> GetByIdAsync(Guid accountId)
+        {
+            return await _context.Accounts
+                .Include(a => a.Transactions)
+                .FirstOrDefaultAsync(a => a.AccountId.Value! == accountId);
+        }
 
-    public void Add(AccountModel account) => _accounts.Add(account);
+        public async Task<Account> GetByAccountNumberAsync(AccountNumber accountNumber)
+        {
+            return await _context.Accounts
+                .Include(a => a.Transactions)
+                .FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+        }
 
-    public Task<Account> GetByIdAsync(Guid accountId)
-    {
-        throw new NotImplementedException();
-    }
+        public async Task<IEnumerable<Account>> GetByCustomerIdAsync(Guid customerId)
+        {
+            return await _context.Accounts
+                .Where(a => a.CustomerId.Value == customerId)
+                .Include(a => a.Transactions)
+                .ToListAsync();
+        }
 
-    public Task<Account> GetByAccountNumberAsync(AccountNumber accountNumber)
-    {
-        throw new NotImplementedException();
-    }
+        public async Task AddAsync(Account account)
+        {
+            await _context.Accounts.AddAsync(account);
+        }
 
-    public Task<IEnumerable<Account>> GetByCustomerIdAsync(Guid customerId)
-    {
-        throw new NotImplementedException();
-    }
+        public async Task UpdateAsync(Account account)
+        {
+            _context.Accounts.Update(account);
+            await Task.CompletedTask;
+        }
 
-    public Task AddAsync(Account account)
-    {
-        throw new NotImplementedException();
-    }
+        public async Task<bool> AccountNumberExistsAsync(AccountNumber accountNumber)
+        {
+            return await _context.Accounts.AnyAsync(a => a.AccountNumber == accountNumber);
+        }
 
-    public Task UpdateAsync(Account account)
-    {
-        throw new NotImplementedException();
-    }
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+        
+       
+        public async Task<List<Account>> GetAllAsync()
+        {
+            return await _context.Accounts
+                .Include(a => a.Transactions)
+                .ToListAsync();
+        }
 
-    public Task<bool> AccountNumberExistsAsync(AccountNumber accountNumber)
-    {
-        throw new NotImplementedException();
     }
 }
