@@ -4,6 +4,10 @@ public record class AccountNumber
 {
     public string Value { get; }
 
+    private AccountNumber() : this(string.Empty) { }
+
+    public static AccountNumber Create(string value) => new(value);
+
     public AccountNumber(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length != 10)

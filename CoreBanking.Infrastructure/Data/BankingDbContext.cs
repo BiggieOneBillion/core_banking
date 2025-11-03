@@ -42,7 +42,14 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasKey(e => e.AccountId);
-                entity.Property(e => e.AccountNumber).HasColumnName("AccountNumber").IsRequired().HasMaxLength(10);
+                // entity.Property(e => e.AccountNumber).HasColumnName("AccountNumber").IsRequired().HasMaxLength(10);
+                entity.Property(a => a.AccountNumber)
+                        .HasConversion(
+                            accountNumber => accountNumber.Value,
+                            value => AccountNumber.Create(value))
+                        .HasColumnName("AccountNumber")
+                        .HasMaxLength(10)
+                        .IsRequired();
                 entity.OwnsOne(e => e.Balance, money =>
                 {
                   money.Property(m => m.Amount).HasColumnName("Balance Amount").HasPrecision(18, 2);
@@ -100,8 +107,9 @@ namespace CoreBankingTest.Infra.Data
 	        );
 
 	        modelBuilder.Entity<Account>().HasData(new {
-			AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
-			AccountNumber = "1000000001", // maps to AccountNumber.Value
+			// AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
+			AccountId = AccountId.Create(Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde")),
+			AccountNumber = AccountNumber.Create("1000000001"), // maps to AccountNumber.Value
 			AccountType = AccountType.Checkings, // EF handles enum conversion
 			CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
 			BalanceAmount = 1500.00m, // maps to Money.Amount

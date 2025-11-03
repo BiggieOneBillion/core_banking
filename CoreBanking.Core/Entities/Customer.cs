@@ -19,8 +19,7 @@ public class Customer : ISoftDelete
 
      public bool IsDeleted { get; private set; }
      public DateTime? DeletedAt { get; private set; }
-        public string? DeletedBy { get; private set; }
-
+    public string? DeletedBy { get; private set; }
 
     private readonly List<Account> _account = new();
 

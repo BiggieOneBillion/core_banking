@@ -9,11 +9,15 @@ using MediatR;
 namespace CoreBanking.Application.Accounts.Commands.TransferMoney;
 
 public record TransferMoneyCommand : ICommand
-    {
-        public string SourceAccountNumber { get; init; } = string.Empty;
-        public string DestinationtNumber { get; init; } = string.Empty;
-        public decimal Amount { get; init; }
-        public string Currency { get; init; } = "NGN";
+{
+        // public string SourceAccountNumber { get; init; } = string.Empty;
+        // public string DestinationtNumber { get; init; } = string.Empty;
+        // public decimal Amount { get; init; }
+        // public string Currency { get; init; } = "NGN";
+        
+        public AccountNumber SourceAccountNumber { get; init; } = AccountNumber.Create(string.Empty);
+        public AccountNumber DestinationAccountNumber { get; init; } = AccountNumber.Create(string.Empty);
+        public Money Amount { get; init; } = new Money(0);
 
         public string Reference { get; init; } = string.Empty;
 
@@ -42,18 +46,24 @@ public record TransferMoneyCommand : ICommand
             try
             {
                 var sourceAccount = await _accountRepository.GetByAccountNumberAsync(new AccountNumber(request.SourceAccountNumber));
-                var destAccount = await _accountRepository.GetByAccountNumberAsync(new AccountNumber(request.DestinationtNumber));
+                var destAccount = await _accountRepository.GetByAccountNumberAsync(new AccountNumber(request.DestinationAccountNumber));
 
                 if (sourceAccount == null) return Result.Failure("Source account not found");
                 if (destAccount == null) return Result.Failure("Destination account not found");
 
 
-                sourceAccount.Transfer(
-                    amount: new Money(request.Amount, request.Currency),
-                    destination: destAccount,
-                    reference: request.Reference,
-                    description: request.Description
-                    );
+            // sourceAccount.Transfer(
+            //     amount: new Money(request.Amount, request.Currency),
+            //     destination: destAccount,
+            //     reference: request.Reference,
+            //     description: request.Description
+            //     );
+            sourceAccount.Transfer(
+                amount: request.Amount,
+                destination: destAccount,
+                reference: request.Reference,
+                description: request.Description
+            );
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Success();

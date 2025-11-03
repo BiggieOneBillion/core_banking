@@ -8,7 +8,8 @@ namespace CoreBanking.Application.Accounts.Queries.GetTransactionHistory;
 
 public record GetTransactionHistoryQuery : IQuery<TransactionHistoryDto>
 {
-    public string AccountNumber { get; init; } = string.Empty;
+    // public string AccountNumber { get; init; } = string.Empty;
+     public AccountNumber AccountNumber { get; init; } = AccountNumber.Create(string.Empty);
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public int Page { get; init; } = 1;
@@ -24,17 +25,7 @@ public record TransactionHistoryDto
     public int TotalPages { get; init; }
 }
 
-public record TransactionDto
-{
-    public string TransactionId { get; init; } = string.Empty;
-    public string Type { get; init; } = string.Empty;
-    public decimal Amount { get; init; }
-    public string Currency { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Reference { get; init; } = string.Empty;
-    public DateTime Timestamp { get; init; }
-    public decimal RunningBalance { get; init; }
-}
+
 
 public class GetTransactionHistoryQueryHandler : IRequestHandler<GetTransactionHistoryQuery, Result<TransactionHistoryDto>>
 {
@@ -77,7 +68,8 @@ public class GetTransactionHistoryQueryHandler : IRequestHandler<GetTransactionH
 
         var transactionDtos = pagedTransactions.Select(t => new TransactionDto
         {
-            TransactionId = t.TransactionId.Value.ToString(),
+            // TransactionId = t.TransactionId.Value.ToString(),
+            TransactionId = TransactionId.Create(t.TransactionId.Value).Value,
             Type = t.Type.ToString(),
             Amount = t.Amount.Amount,
             Currency = t.Amount.Currency,

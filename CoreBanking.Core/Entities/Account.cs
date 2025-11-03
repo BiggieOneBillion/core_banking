@@ -121,7 +121,7 @@ public class Account : ISoftDelete
             };
 
             // Raise domain event if needed
-            account.AddDomainEvent(new AccountCreatedEvent(account));
+            account.AddDomainEvent(new AccountCreatedEvent(accountId:account.AccountId,accountNumber:account.AccountNumber, customerId:account.CustomerId,accountType:account.AccountType, initialDeposit:account.Balance));
 
             return account;
         }

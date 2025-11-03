@@ -1,4 +1,6 @@
 // CoreBanking.Core/Events/MoneyTransferredEvent.cs
+
+using CoreBanking.Core.Common;
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.ValueObjects;
 
