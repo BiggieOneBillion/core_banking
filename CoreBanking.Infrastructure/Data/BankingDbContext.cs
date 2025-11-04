@@ -51,6 +51,10 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasKey(e => e.AccountId);
+                entity.Property(a => a.AccountId)
+                    .HasConversion(
+                        accountId => accountId.Value,
+                        value => new AccountId(value));
                 // entity.Property(e => e.AccountNumber).HasColumnName("AccountNumber").IsRequired().HasMaxLength(10);
                 entity.Property(a => a.AccountNumber)
                         .HasConversion(
@@ -86,6 +90,14 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.HasKey(e => e.TransactionId);
+                entity.Property(t => t.TransactionId)
+                    .HasConversion(
+                        transactionId => transactionId.Value,
+                        value => new TransactionId(value));
+                entity.Property(t => t.AccountId)
+                    .HasConversion(
+                        accountId => accountId.Value,
+                        value => new AccountId(value));
                 entity.OwnsOne(t => t.Amount, money =>
               {
                   money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(18, 2);
@@ -100,36 +112,45 @@ namespace CoreBankingTest.Infra.Data
 
             });
 
+            // Query filters for soft delete
             modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
             modelBuilder.Entity<Account>().HasQueryFilter(a => !a.IsDeleted);
 
-            modelBuilder.Entity<Customer>().HasData(new
-            {
-                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-                FirstName = "Alice",
-                LastName = "Johnson",
-                Email = "alice.johnson@email.com",
-                PhoneNumber = "555-0101",
-                DateCreated = DateTime.UtcNow.AddDays(-30),
-                IsActive = true,
-                IsDeleted = false
-            }
-            );
+            // Seed data - provide raw values for value converters
+            var customerIdValue = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc");
+            var accountIdValue = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde");
 
-            modelBuilder.Entity<Account>().HasData(new
-            {
-                // AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
-                AccountId = AccountId.Create(Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde")),
-                AccountNumber = AccountNumber.Create("1000000001"), // maps to AccountNumber.Value
-                AccountType = AccountType.Checkings, // EF handles enum conversion
-                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-                BalanceAmount = 1500.00m, // maps to Money.Amount
-                Currency = "NGN",
-                DateOpened = DateTime.UtcNow.AddDays(-20),
-                IsActive = true,
-                IsDeleted = false
-            }
-           );
+            // // Seed Customer
+            // modelBuilder.Entity<Customer>().HasData(new
+            // {
+            //     CustomerId = customerIdValue,
+            //     Firstname = "Alice",
+            //     Lastname = "Johnson",
+            //     Email = "alice.johnson@email.com",
+            //     PhoneNumber = "555-0101",
+            //     DateCreated = new DateTime(2024, 12, 5, 0, 0, 0, DateTimeKind.Utc),
+            //     IsActive = true,
+            //     IsDeleted = false
+            // });
+
+            // // Seed Account
+            // modelBuilder.Entity<Account>().OwnsOne(a => a.Balance).HasData(new
+            // {
+            //     AccountAccountId = accountIdValue,  // FK to parent Account
+            //     Amount = 1500.00m,
+            //     Currency = "NGN"
+            // });
+
+            // modelBuilder.Entity<Account>().HasData(new
+            // {
+            //     AccountId = accountIdValue,
+            //     AccountNumber = "1000000001",
+            //     AccountType = "Checkings",
+            //     CustomerId = customerIdValue,
+            //     DateOpened = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc),
+            //     IsActive = true,
+            //     IsDeleted = false
+            // });
 
 
         }

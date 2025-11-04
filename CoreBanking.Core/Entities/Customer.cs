@@ -25,6 +25,10 @@ public class Customer : ISoftDelete
 
     public IReadOnlyCollection<Account> Accounts => _account.AsReadOnly();
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private Customer() { } // EF Core needs this
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+
     public Customer(string firstName, string lastName, string email, string phoneNumber)
     {
         CustomerId = CustomerId.Create();
