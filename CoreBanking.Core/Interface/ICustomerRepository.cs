@@ -5,7 +5,7 @@ namespace CoreBanking.Core.Interface;
 
 public interface ICustomerRepository
 {
-    Task<Customer> GetByIdAsync(Guid customerId);
+    Task<Customer?> GetByIdAsync(Guid customerId);
     Task<IEnumerable<Customer>> GetAllAsync();
 
     Task AddAsync(Customer customer);

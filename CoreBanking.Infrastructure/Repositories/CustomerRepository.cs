@@ -14,7 +14,7 @@ namespace CoreBanking.Infrastructure.Repositories
                 _context = context;
             }
 
-            public async Task<Customer> GetByIdAsync(Guid customerId)
+            public async Task<Customer?> GetByIdAsync(Guid customerId)
             {
             return await _context.Customers.Include(c => c.Accounts).FirstOrDefaultAsync(c => c.CustomerId.Value == customerId);
                 // .FirstOrDefaultAsync(c => c.CustomerId == customerId);

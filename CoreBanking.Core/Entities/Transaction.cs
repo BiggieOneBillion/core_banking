@@ -20,8 +20,9 @@ public class Transaction : ISoftDelete
      public DateTime? DeletedAt { get; private set; }
      public string? DeletedBy { get; private set; }
 
-
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
      private Transaction() { } // for materializing EF Core
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
      public Transaction(AccountId accountId, TransactionType type, Money amount, string description, Account account, string reference ="" )
      {
@@ -32,7 +33,7 @@ public class Transaction : ISoftDelete
          Amount = amount;
          Description = description ?? throw new ArgumentNullException(nameof(description));
          Timestamp = DateTime.UtcNow;
-         Reference = string.IsNullOrEmpty(reference) ? GenerateReference() : Reference;
+         Reference = string.IsNullOrEmpty(reference) ? GenerateReference() : reference;
      }
 
      private string GenerateReference()

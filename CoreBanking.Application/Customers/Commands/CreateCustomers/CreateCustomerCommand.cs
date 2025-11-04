@@ -1,8 +1,10 @@
 using System;
+using CoreBanking.Application.Common.Models;
+using MediatR;
 
 namespace CoreBanking.Application.Customers.Commands.CreateCustomers;
 
-public record CreateCustomerCommand
+public record CreateCustomerCommand: IRequest<Result<Guid>>
 {
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;

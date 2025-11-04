@@ -1,6 +1,9 @@
+using System.Text.Json;
+using CoreBanking.Core.Common;
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.Enums;
 using CoreBanking.Core.ValueObjects;
+using CoreBanking.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 namespace CoreBankingTest.Infra.Data
 {
@@ -16,9 +19,15 @@ namespace CoreBankingTest.Infra.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
+        public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
+
 
             // Configure entity properties and relationships here if needed
 
@@ -52,10 +61,10 @@ namespace CoreBankingTest.Infra.Data
                         .IsRequired();
                 entity.OwnsOne(e => e.Balance, money =>
                 {
-                  money.Property(m => m.Amount).HasColumnName("Balance Amount").HasPrecision(18, 2);
-                  money.Property(m => m.Currency).HasColumnName("Balance Currency").HasMaxLength
-            (3).HasDefaultValue("NGN");
-              });
+                    money.Property(m => m.Amount).HasColumnName("Balance Amount").HasPrecision(18, 2);
+                    money.Property(m => m.Currency).HasColumnName("Balance Currency").HasMaxLength
+              (3).HasDefaultValue("NGN");
+                });
 
                 entity.Property(a => a.AccountType).HasConversion<string>().IsRequired();
 
@@ -68,9 +77,9 @@ namespace CoreBankingTest.Infra.Data
 
                 entity.Navigation(a => a.Transactions).AutoInclude(false);
 
-                 entity.Property(a => a.RowVersion)
-            .IsRowVersion()
-            .IsConcurrencyToken();
+                entity.Property(a => a.RowVersion)
+           .IsRowVersion()
+           .IsConcurrencyToken();
 
             });
 
@@ -94,33 +103,66 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
             modelBuilder.Entity<Account>().HasQueryFilter(a => !a.IsDeleted);
 
-            modelBuilder.Entity<Customer>().HasData(new {
-			CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-			FirstName = "Alice",
-			LastName = "Johnson",
-			Email = "alice.johnson@email.com",
-			PhoneNumber = "555-0101",
-			DateCreated = DateTime.UtcNow.AddDays(-30),
-			IsActive = true,
-			IsDeleted = false
-		     }
-	        );
+            modelBuilder.Entity<Customer>().HasData(new
+            {
+                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
+                FirstName = "Alice",
+                LastName = "Johnson",
+                Email = "alice.johnson@email.com",
+                PhoneNumber = "555-0101",
+                DateCreated = DateTime.UtcNow.AddDays(-30),
+                IsActive = true,
+                IsDeleted = false
+            }
+            );
 
-	        modelBuilder.Entity<Account>().HasData(new {
-			// AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
-			AccountId = AccountId.Create(Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde")),
-			AccountNumber = AccountNumber.Create("1000000001"), // maps to AccountNumber.Value
-			AccountType = AccountType.Checkings, // EF handles enum conversion
-			CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-			BalanceAmount = 1500.00m, // maps to Money.Amount
-			Currency = "NGN",
-			DateOpened = DateTime.UtcNow.AddDays(-20),
-			IsActive = true,
-			IsDeleted = false
-	        }
-           ); 
+            modelBuilder.Entity<Account>().HasData(new
+            {
+                // AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
+                AccountId = AccountId.Create(Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde")),
+                AccountNumber = AccountNumber.Create("1000000001"), // maps to AccountNumber.Value
+                AccountType = AccountType.Checkings, // EF handles enum conversion
+                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
+                BalanceAmount = 1500.00m, // maps to Money.Amount
+                Currency = "NGN",
+                DateOpened = DateTime.UtcNow.AddDays(-20),
+                IsActive = true,
+                IsDeleted = false
+            }
+           );
 
 
         }
+    
+       public async Task SaveChangesWithOutboxAsync(CancellationToken cancellationToken = default)
+        {
+            // Convert domain events to outbox messages
+            var events = ChangeTracker.Entries<AggregateRoot<AccountId>>()
+                .SelectMany(x => x.Entity.DomainEvents)
+                .Select(domainEvent => new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    Type = domainEvent.GetType().Name,
+                    Content = JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
+                    OccurredOn = domainEvent.OccurredOn
+                })
+                .ToList();
+
+            // Clear domain events from aggregates
+            ChangeTracker.Entries<AggregateRoot<AccountId>>()
+                .ToList()
+                .ForEach(entry => entry.Entity.ClearDomainEvents());
+
+            // Save changes (including outbox messages) in single transaction
+            await base.SaveChangesAsync(cancellationToken);
+
+            // Add outbox messages after saving to ensure they're included in transaction
+            if (events.Any())
+            {
+                await OutboxMessages.AddRangeAsync(events, cancellationToken);
+                await base.SaveChangesAsync(cancellationToken);
+            }
+        }
+
     }
 }

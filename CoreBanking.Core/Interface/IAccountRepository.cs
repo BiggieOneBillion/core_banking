@@ -7,9 +7,9 @@ namespace CoreBanking.Core.Interface;
 
 public interface IAccountRepository
 {
-    Task<Account> GetByIdAsync(Guid accountId);
-    
-    Task<Account> GetByAccountNumberAsync(AccountNumber accountNumber);
+    Task<Account?> GetByIdAsync(Guid accountId);
+
+    Task<Account?> GetByAccountNumberAsync(AccountNumber accountNumber);
 
     Task<IEnumerable<Account>> GetByCustomerIdAsync(Guid customerId);
 

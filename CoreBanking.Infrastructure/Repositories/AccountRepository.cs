@@ -17,18 +17,18 @@ namespace CoreBanking.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Account> GetByIdAsync(Guid accountId)
+        public async Task<Account?> GetByIdAsync(Guid accountId)
         {
             //  return await _context.Accounts
-            //        .Include(a => a.Customer) 
-            //        .Include(a => a.Transactions) 
+            //        .Include(a => a.Customer)
+            //        .Include(a => a.Transactions)
             //        .FirstOrDefaultAsync(a => a.AccountId.Value! == accountId);
             return await _context.Accounts
                 .Include(a => a.Transactions)
                 .FirstOrDefaultAsync(a => a.AccountId.Value! == accountId);
         }
 
-        public async Task<Account> GetByAccountNumberAsync(AccountNumber accountNumber)
+        public async Task<Account?> GetByAccountNumberAsync(AccountNumber accountNumber)
         {
             return await _context.Accounts
                 .Include(a => a.Transactions)
