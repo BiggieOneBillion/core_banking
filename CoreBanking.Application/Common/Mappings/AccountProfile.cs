@@ -32,18 +32,18 @@ namespace CoreBanking.Application.Common.Mappings;
                 ))
                 .ForAllMembers(opt => opt.Ignore()); // Ignore all direct mappings since we use constructor
 
-        // Transaction mappings
-        CreateMap<Transaction, TransactionDto>()
-            .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionId.Value.ToString()))
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-            .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount.Amount))
-            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Amount.Currency));
-                
-         CreateMap<Account, AccountSummaryDto>()
-        .ForMember(dest => dest.DisplayName,
-            opt => opt.MapFrom((src, dest) =>
-                src.AccountType == AccountType.Savings
-                    ? $"{src.AccountNumber.Value} - Savings"
-                    : $"{src.AccountNumber.Value} - Current"));
-        }
+            // Transaction mappings
+            CreateMap<Transaction, TransactionDto>()
+                .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.TransactionId.Value.ToString()))
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount.Amount))
+                .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Amount.Currency));
+                    
+            CreateMap<Account, AccountSummaryDto>()
+            .ForMember(dest => dest.DisplayName,
+                opt => opt.MapFrom((src, dest) =>
+                    src.AccountType == AccountType.Savings
+                        ? $"{src.AccountNumber.Value} - Savings"
+                        : $"{src.AccountNumber.Value} - Current"));
+            }
     }

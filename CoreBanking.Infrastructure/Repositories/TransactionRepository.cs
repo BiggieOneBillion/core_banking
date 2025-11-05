@@ -17,7 +17,7 @@ namespace CoreBanking.Infrastructure.Repositories;
 		}
 
 		public async Task<Transaction?> GetByIdAsync(TransactionId transactionId, CancellationToken cancellationToken = default)
-    {
+        {
         return await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionId == transactionId, cancellationToken);
 		}
 

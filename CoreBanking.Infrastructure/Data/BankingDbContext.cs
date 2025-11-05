@@ -34,7 +34,11 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Customer>(entity =>
              {
                  entity.HasKey(e => e.CustomerId);
-                 entity.Property(c => c.CustomerId).HasConversion(customerId => customerId.Value, value => new CustomerId(value));
+                 entity.Property(c => c.CustomerId)
+                 .HasConversion(
+                    customerId => customerId.Value,
+                    value => new CustomerId(value)
+                 ).HasColumnName("CustomerId");
                  entity.Property(c => c.Firstname).IsRequired().HasMaxLength(100);
                  entity.Property(c => c.Lastname).IsRequired().HasMaxLength(100);
 
@@ -44,6 +48,13 @@ namespace CoreBankingTest.Infra.Data
                  entity.HasMany(c => c.Accounts)
                  .WithOne(a => a.Customer)
                  .HasForeignKey(a => a.CustomerId);
+
+                //  entity.Property(c => c.CustomerId)
+                // .HasConversion(
+                //     v => v.Value,            // to db (CustomerId -> Guid)
+                //     v => new CustomerId(v)   // from db (Guid -> CustomerId)
+                // )
+                // .HasColumnName("CustomerId");
 
              });
 

@@ -12,4 +12,6 @@ public interface ICustomerRepository
     Task UpdateAsync(Customer customer);
 
     Task<bool> ExistsAsync(Guid customerId);
+
+    Task<bool> EmailExistsAsync(string email);
 }

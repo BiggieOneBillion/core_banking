@@ -1,5 +1,6 @@
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.Interface;
+using CoreBanking.Core.ValueObjects;
 using CoreBankingTest.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,10 @@ namespace CoreBanking.Infrastructure.Repositories
 
             public async Task<Customer?> GetByIdAsync(Guid customerId)
             {
-            return await _context.Customers.Include(c => c.Accounts).FirstOrDefaultAsync(c => c.CustomerId.Value == customerId);
-                // .FirstOrDefaultAsync(c => c.CustomerId == customerId);
-                    // .Include(c => c.Accounts)
+                var customerIdValue = new CustomerId(customerId);
+                return await _context.Customers
+                    .Include(c => c.Accounts)
+                    .FirstOrDefaultAsync(c => c.CustomerId == customerIdValue);
             }
 
             public async Task<IEnumerable<Customer>> GetAllAsync()
@@ -48,6 +50,11 @@ namespace CoreBanking.Infrastructure.Repositories
             public async Task SaveChangesAsync()
             {
                 await _context.SaveChangesAsync();
+            }
+                
+            public async Task<bool> EmailExistsAsync(string email)
+            {
+                return await _context.Customers.AnyAsync(el => el.Email == email);
             }
         }
     }

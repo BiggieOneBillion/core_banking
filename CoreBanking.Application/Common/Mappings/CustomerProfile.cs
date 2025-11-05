@@ -24,8 +24,8 @@ public class CustomerProfile : Profile
             .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId.Value))
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Firstname))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.Lastname))
-            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
-            // .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-            // .ForMember(dest => dest.TotalAccounts, opt => opt.MapFrom(src => src.Accounts.Count));
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+            .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.PhoneNumber))
+            .ForMember(dest => dest.Accounts, opt => opt.MapFrom(src => src.Accounts.Count));
     }
 }
