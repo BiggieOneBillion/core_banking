@@ -1,5 +1,5 @@
-using CoreBankingTest.Infra.Data;
-using CoreBanking.Core.Interfaces;
+
+using CoreBanking.Core.Interface;
 
 namespace CoreBanking.Infrastructure.Data;
 

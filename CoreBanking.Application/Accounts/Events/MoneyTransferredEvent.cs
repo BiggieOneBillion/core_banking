@@ -2,17 +2,21 @@
 
 using CoreBanking.Core.Common;
 using CoreBanking.Core.Entities;
+using CoreBanking.Core.Interface;
 using CoreBanking.Core.ValueObjects;
 
 namespace CoreBanking.Core.Events;
 
 public class MoneyTransferredEvent : IDomainEvent
 {
+    public Guid EventId { get; } = Guid.NewGuid();
+    public DateTime OccurredOn { get; }
+    public string EventType => GetType().Name;
+
     public Account SourceAccount { get; }
     public Account DestinationAccount { get; }
     public Money Amount { get; }
     public string Reference { get; }
-    public DateTime OccurredOn { get; }
 
     public MoneyTransferredEvent(Account sourceAccount, Account destinationAccount, Money amount, string reference)
     {

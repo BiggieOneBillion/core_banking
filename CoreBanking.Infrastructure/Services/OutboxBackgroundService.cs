@@ -1,7 +1,9 @@
-using CoreBanking.APP.Common.Interfaces;
+using CoreBanking.Core.Interface;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+namespace CoreBanking.Infrastructure.Services;
 
 public class OutboxBackgroundService : BackgroundService
     {

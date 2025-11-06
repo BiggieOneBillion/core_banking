@@ -26,7 +26,13 @@ public record AccountCreatedEvent : DomainEvent
     public CustomerId CustomerId { get; }
     public AccountType AccountType { get; }
     public Money InitialDeposit { get; }
-    public AccountCreatedEvent(AccountId accountId, AccountNumber accountNumber, CustomerId customerId, AccountType accountType, Money initialDeposit)
+    public AccountCreatedEvent(
+        AccountId accountId,
+        AccountNumber accountNumber,
+        CustomerId customerId,
+        AccountType accountType,
+        Money initialDeposit
+        )
     {
         AccountId = accountId;
         AccountNumber = accountNumber;

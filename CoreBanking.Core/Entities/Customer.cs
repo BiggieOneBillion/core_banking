@@ -25,6 +25,8 @@ public class Customer : ISoftDelete
 
     public IReadOnlyCollection<Account> Accounts => _account.AsReadOnly();
 
+    private Customer() { } // EF Core constructor
+
     public Customer(string firstName, string lastName, string email, string phoneNumber)
     {
         CustomerId = CustomerId.Create();

@@ -3,7 +3,7 @@ using CoreBanking.Core.Entities;
 using CoreBanking.Core.Interface;
 using CoreBanking.Core.Models;
 using CoreBanking.Core.ValueObjects;
-using CoreBankingTest.Infra.Data;
+using CoreBanking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreBanking.Infrastructure.Repositories

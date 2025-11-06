@@ -64,15 +64,15 @@
 //     }
 
 using System.Text.Json;
-using CoreBanking.APP.Common.Interfaces;
 using CoreBanking.Core.Common;
+using CoreBanking.Core.Interface;
 using CoreBanking.Infrastructure.Persistence.Outbox;
-using CoreBankingTest.Infra.Data;
+using CoreBanking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 
-namespace CoreBanking.Core.Persistence.Services;
+namespace CoreBanking.Infrastructure.Services;
 
 public class OutboxMessageProcessor : IOutboxMessageProcessor
 {
@@ -103,7 +103,7 @@ public class OutboxMessageProcessor : IOutboxMessageProcessor
                 var domainEvent = DeserializeMessage(message);
                 // if (domainEvent != null)
                 // {
-                //     // await _eventBus.PublishAsync(domainEvent, cancellationToken);
+                //     await _eventBus.PublishAsync(domainEvent, cancellationToken);
                 // }
 
                 message.ProcessedOn = DateTime.UtcNow;

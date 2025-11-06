@@ -1,11 +1,12 @@
 // CoreBanking.Core/Events/MoneyTransferredEvent.cs
+using CoreBanking.APP.Common;
 using CoreBanking.Core.Common;
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.ValueObjects;
 
 namespace CoreBanking.Core.Events;
 
-public class MoneyTransferredEvent : IDomainEvent
+public record MoneyTransferredEvent : DomainEvent
 {
     public Account SourceAccount { get; }
     public Account DestinationAccount { get; }

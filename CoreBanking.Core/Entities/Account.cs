@@ -4,7 +4,6 @@ using CoreBanking.Core.Common;
 using CoreBanking.Core.Enums;
 using CoreBanking.Core.Events;
 using CoreBanking.Core.Interface;
-using CoreBanking.Core.Interfaces;
 using CoreBanking.Core.ValueObjects;
 namespace CoreBanking.Core.Entities;
 
@@ -22,6 +21,9 @@ public class Account : AggregateRoot<AccountId>, ISoftDelete
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string? DeletedBy { get; private set; }
+
+    private readonly List<DomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     // Navigation properties - private to enforce aggregate boundary
     private readonly List<Transaction> _transactions = new();
@@ -46,6 +48,41 @@ public class Account : AggregateRoot<AccountId>, ISoftDelete
         DateOpened = DateTime.UtcNow;
         IsActive = true;
     }
+
+    public static Account Create(
+            CustomerId customerId,
+            AccountNumber accountNumber,
+            AccountType accountType,
+            Money initialBalance)
+        {
+            // Domain validation
+            if (initialBalance.Amount < 0)
+                throw new InvalidOperationException("Initial balance cannot be negative");
+
+            if (initialBalance.Amount > 1000000)
+                throw new InvalidOperationException("Initial deposit too large");
+
+            // Create account using private constructor
+            var account = new Account(
+                accountNumber: accountNumber,
+                accountType: accountType,
+                customerId: customerId
+            )
+            {
+                Balance = initialBalance // Set initial balance after construction
+            };
+
+            // Raise domain event if needed
+            account.AddDomainEvent(new AccountCreatedEvent(
+                accountId: account.AccountId,
+                accountNumber: account.AccountNumber,
+                customerId: account.CustomerId,
+                accountType: account.AccountType,
+                initialDeposit: account.Balance
+            ));
+
+            return account;
+        }
 
     // Core banking operations - these are the aggregate's public API
     public Transaction Deposit(Money amount, string description = "Deposit")
@@ -101,34 +138,37 @@ public class Account : AggregateRoot<AccountId>, ISoftDelete
         return transaction;
     }
 
-    public static Account Create(
-        CustomerId customerId,
-        AccountNumber accountNumber,
-        AccountType accountType,
-        Money initialBalance)
-    {
-        // Domain validation
-        if (initialBalance.Amount < 0)
-            throw new InvalidOperationException("Initial balance cannot be negative");
+    // public static Account Create(
+    //     CustomerId customerId,
+    //     AccountNumber accountNumber,
+    //     AccountType accountType,
+    //     Money initialBalance)
+    // {
+    //     // Domain validation
+    //     if (initialBalance.Amount < 0)
+    //         throw new InvalidOperationException("Initial balance cannot be negative");
 
-        if (initialBalance.Amount > 1000000)
-            throw new InvalidOperationException("Initial deposit too large");
+    //     if (initialBalance.Amount > 1000000)
+    //         throw new InvalidOperationException("Initial deposit too large");
 
-        // Create account using private constructor
-        var account = new Account(
-            accountNumber: accountNumber,
-            accountType: accountType,
-            customerId: customerId
-        )
-        {
-            Balance = initialBalance // Set initial balance after construction
-        };
+    //     // Create account using private constructor
+    //     var account = new Account(
+    //         accountNumber: accountNumber,
+    //         accountType: accountType,
+    //         customerId: customerId
+    //     )
+    //     {
+    //         Balance = initialBalance // Set initial balance after construction
+    //     };
 
-        // Raise domain event if needed
-        account.AddDomainEvent(new AccountCreatedEvent(accountId: account.AccountId, accountNumber: account.AccountNumber, customerId: account.CustomerId, accountType: account.AccountType, initialDeposit: account.Balance));
+    //     // Raise domain event if needed
+    //     account.AddDomainEvent(new AccountCreatedEvent(accountId: account.AccountId, accountNumber: account.AccountNumber, customerId: account.CustomerId, accountType: account.AccountType, initialDeposit: account.Balance));
 
-        return account;
-    }
+    //     return account;
+    // }
+
+
+
     public Result Transfer(Money amount, Account destination, string reference, string description)
     {
         // Validate inputs
@@ -152,7 +192,7 @@ public class Account : AggregateRoot<AccountId>, ISoftDelete
         if (Balance.Amount < amount.Amount)
         {
             // Raise insufficient funds event
-            AddDomainEvent(new InsufficientFundsEvent(
+            _domainEvents.Add(new InsufficientFundsEvent(
                 AccountNumber, amount, Balance, "Transfer"));
 
             return Result.Failure("Insufficient funds for transfer");
@@ -176,13 +216,12 @@ public class Account : AggregateRoot<AccountId>, ISoftDelete
 
         // Raise money transferred event
         var transactionId = TransactionId.Create();
-        AddDomainEvent(new MoneyTransferedEVent(
+        _domainEvents.Add(new MoneyTransferedEVent(
             transactionId, AccountNumber, destination.AccountNumber, amount, reference));
 
         // Return success result
         return Result.Success();
     }
-
     public Result Debit(Money amount, string description, string reference)
     {
         if (IsDeleted)

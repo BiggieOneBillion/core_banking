@@ -1,9 +1,6 @@
-using System;
-
-namespace CoreBanking.APP.Common.Interfaces;
+namespace CoreBanking.Core.Interface;
 
 public interface IOutboxMessageProcessor
 {
     Task ProcessOutboxMessagesAsync(CancellationToken cancellationToken);
-
 }

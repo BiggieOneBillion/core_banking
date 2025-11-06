@@ -1,12 +1,11 @@
-using System;
-using CoreBanking.Core.Common;
-using CoreBanking.Core.Enums;
-using CoreBanking.Core.Interfaces;
-using CoreBanking.Core.ValueObjects;
+
+
+using CoreBanking.Core.Interface;
+using MediatR;
 
 namespace CoreBanking.APP.Common;
 
-public abstract record DomainEvent : IDomainEvent
+public abstract record DomainEvent : IDomainEvent, INotification
 {
     public Guid EventId { get; set; } = Guid.NewGuid();
     public DateTime OccurredOn { get; set; } = DateTime.UtcNow;

@@ -1,6 +1,6 @@
 using CoreBanking.Core.Entities;
 using CoreBanking.Core.Interface;
-using CoreBankingTest.Infra.Data;
+using CoreBanking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreBanking.Infrastructure.Repositories

@@ -1,4 +1,4 @@
-namespace CoreBanking.Core.Interfaces;
+namespace CoreBanking.Core.Interface;
 
 public interface IUnitOfWork
 {

@@ -5,7 +5,9 @@ using CoreBanking.Core.Enums;
 using CoreBanking.Core.ValueObjects;
 using CoreBanking.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
-namespace CoreBankingTest.Infra.Data
+
+
+namespace CoreBanking.Infrastructure.Data
 {
     public class BankingDbContext : DbContext
     {
@@ -51,6 +53,19 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Account>(entity =>
             {
                 entity.HasKey(e => e.AccountId);
+
+                // Configure AccountId value converter
+                entity.Property(a => a.AccountId)
+                    .HasConversion(
+                        accountId => accountId.Value,
+                        value => AccountId.Create(value));
+
+                // Configure CustomerId foreign key
+                entity.Property(a => a.CustomerId)
+                    .HasConversion(
+                        customerId => customerId.Value,
+                        value => new CustomerId(value));
+
                 // entity.Property(e => e.AccountNumber).HasColumnName("AccountNumber").IsRequired().HasMaxLength(10);
                 entity.Property(a => a.AccountNumber)
                         .HasConversion(
@@ -61,9 +76,8 @@ namespace CoreBankingTest.Infra.Data
                         .IsRequired();
                 entity.OwnsOne(e => e.Balance, money =>
                 {
-                    money.Property(m => m.Amount).HasColumnName("Balance Amount").HasPrecision(18, 2);
-                    money.Property(m => m.Currency).HasColumnName("Balance Currency").HasMaxLength
-              (3).HasDefaultValue("NGN");
+                    money.Property(m => m.Amount).HasColumnName("BalanceAmount").HasPrecision(18, 2);
+                    money.Property(m => m.Currency).HasColumnName("BalanceCurrency").HasMaxLength(3).HasDefaultValue("NGN");
                 });
 
                 entity.Property(a => a.AccountType).HasConversion<string>().IsRequired();
@@ -81,11 +95,27 @@ namespace CoreBankingTest.Infra.Data
            .IsRowVersion()
            .IsConcurrencyToken();
 
+                // Ignore domain events - they're converted to outbox messages
+                entity.Ignore(a => a.DomainEvents);
+
             });
 
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.HasKey(e => e.TransactionId);
+
+                // Configure TransactionId value converter
+                entity.Property(t => t.TransactionId)
+                    .HasConversion(
+                        transactionId => transactionId.Value,
+                        value => TransactionId.Create(value));
+
+                // Configure AccountId foreign key
+                entity.Property(t => t.AccountId)
+                    .HasConversion(
+                        accountId => accountId.Value,
+                        value => AccountId.Create(value));
+
                 entity.OwnsOne(t => t.Amount, money =>
               {
                   money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(18, 2);
@@ -103,38 +133,46 @@ namespace CoreBankingTest.Infra.Data
             modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
             modelBuilder.Entity<Account>().HasQueryFilter(a => !a.IsDeleted);
 
-            modelBuilder.Entity<Customer>().HasData(new
-            {
-                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-                FirstName = "Alice",
-                LastName = "Johnson",
-                Email = "alice.johnson@email.com",
-                PhoneNumber = "555-0101",
-                DateCreated = DateTime.UtcNow.AddDays(-30),
-                IsActive = true,
-                IsDeleted = false
-            }
-            );
+            // Seed data - use primitive values for value objects with converters
+            // modelBuilder.Entity<Customer>().HasData(new
+            // {
+            //     CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
+            //     Firstname = "Alice",
+            //     Lastname = "Johnson",
+            //     Email = "alice.johnson@email.com",
+            //     PhoneNumber = "555-0101",
+            //     DateCreated = new DateTime(2024, 12, 7, 0, 0, 0, DateTimeKind.Utc),
+            //     IsActive = true,
+            //     IsDeleted = false
+            // }
+            // );
 
-            modelBuilder.Entity<Account>().HasData(new
-            {
-                // AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
-                AccountId = AccountId.Create(Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde")),
-                AccountNumber = AccountNumber.Create("1000000001"), // maps to AccountNumber.Value
-                AccountType = AccountType.Checkings, // EF handles enum conversion
-                CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
-                BalanceAmount = 1500.00m, // maps to Money.Amount
-                Currency = "NGN",
-                DateOpened = DateTime.UtcNow.AddDays(-20),
-                IsActive = true,
-                IsDeleted = false
-            }
-           );
+            // Note: Seed data for owned entities (Money/Balance) needs to be configured separately
+            // Commenting out for now to avoid complexity - you can add seed data later if needed
+
+            // modelBuilder.Entity<Account>().HasData(new
+            // {
+            //     AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
+            //     AccountNumber = "1000000001",
+            //     AccountType = "Checkings",
+            //     CustomerId = Guid.Parse("a1b2c3d4-1234-5678-9abc-123456789abc"),
+            //     DateOpened = new DateTime(2024, 12, 17, 0, 0, 0, DateTimeKind.Utc),
+            //     IsActive = true,
+            //     IsDeleted = false,
+            //     RowVersion = new byte[0]
+            // });
+
+            // modelBuilder.Entity<Account>().OwnsOne(a => a.Balance).HasData(new
+            // {
+            //     AccountId = Guid.Parse("c3d4e5f6-3456-7890-cde1-345678901cde"),
+            //     Amount = 1500.00m,
+            //     Currency = "NGN"
+            // });
 
 
         }
-    
-       public async Task SaveChangesWithOutboxAsync(CancellationToken cancellationToken = default)
+
+        public async Task SaveChangesWithOutboxAsync(CancellationToken cancellationToken = default)
         {
             // Convert domain events to outbox messages
             var events = ChangeTracker.Entries<AggregateRoot<AccountId>>()
